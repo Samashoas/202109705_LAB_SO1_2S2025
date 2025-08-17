@@ -10,7 +10,7 @@ const (
 	VmName = "VM1"
 	Estudiante = "Juan Pablo Samayoa Ruiz"
 	Carnet = "202109705"
-	port = "8080"
+	port = "8082"
 )
 
 type Response struct {
