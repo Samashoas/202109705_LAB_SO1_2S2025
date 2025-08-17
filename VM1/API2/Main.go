@@ -18,12 +18,12 @@ type Response struct {
 }
 
 func main() {
-	http.HandleFunc("/api2/"+Carnet+"/llamar-api1", func(w http.ResponseWriter, r *http.Request) {
-		writeJson(w, Response{Message: "Hola, responde la API2: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
+	http.HandleFunc("/api2/"+Carnet+"/respuesta-api1", func(w http.ResponseWriter, r *http.Request) {
+		writeJson(w, Response{Message: "Hola, responde la API: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
 	})
 
-	http.HandleFunc("/api2/"+Carnet+"/llamar-api3", func(w http.ResponseWriter, r *http.Request) {
-		writeJson(w, Response{Message: "Hola, responde la API3: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
+	http.HandleFunc("/api2/"+Carnet+"/respuesta-api3", func(w http.ResponseWriter, r *http.Request) {
+		writeJson(w, Response{Message: "Hola, responde la API: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
