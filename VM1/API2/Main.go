@@ -14,7 +14,7 @@ const (
 	Carnet = "202109705"
 	port = "8082"
 
-	Api1IP = "http://localhost:8081"
+	Api1IP = "http://192.168.122.207:8081"
 	Api3IP = "http://192.168.122.114:8083"
 )
 
