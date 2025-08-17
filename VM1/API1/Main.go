@@ -14,7 +14,7 @@ const (
 	Carnet = "202109705"
 	port = "8081"
 
-	Api2IP = "http://127.0.0.1:8082"
+	Api2IP = "http://localhost:8082"
 	Api3IP = "http://192.168.122.114:8083"
 )
 
@@ -27,20 +27,26 @@ var httpClient = &http.Client{Timeout: 3 * time.Second}
 
 func main() {
 	// ENDPOINTS DE RESPUESTA DE LA API1
-	http.HandleFunc("/api1/"+Carnet+"/respuesta-api2", func(w http.ResponseWriter, r *http.Request) {
+	//Respuesta de API1
+	http.HandleFunc("/api1/"+Carnet+"/respuesta-api1", func(w http.ResponseWriter, r *http.Request) {
 		writeJson(w, Response{Message: "Hola, responde la API: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
 	})
 
+	/*
+	//Respuesta de API3
 	http.HandleFunc("/api1/"+Carnet+"/respuesta-api3", func(w http.ResponseWriter, r *http.Request) {
 		writeJson(w, Response{Message: "Hola, responde la API: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
 	})
+	*/
 
 	// ENDPOINTS DE LLAMADA A OTRAS API
+	//API1 -> API2
 	http.HandleFunc("/api1/"+Carnet+"/llamar-api2", func(w http.ResponseWriter, r *http.Request) {
-		forward(w, Api2IP+"/api2/"+Carnet+"/respuesta-api1")
+		forward(w, Api2IP+"/api2/"+Carnet+"/respuesta-api2")
 	})
+	//API1 -> API3
 	http.HandleFunc("/api1/"+Carnet+"/llamar-api3", func(w http.ResponseWriter, r *http.Request) {
-		forward(w, Api3IP+"/api3/"+Carnet+"/respuesta-api1")
+		forward(w, Api3IP+"/api3/"+Carnet+"/respuesta-api3")
 	})
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +59,7 @@ func main() {
 func forward(w http.ResponseWriter, url string) {
 	resp, err := httpClient.Get(url)
 	if err != nil {
-		http.Error(w, "Error forwarding request: "+err.Error(), http.StatusBadGateway)
+		http.Error(w, "Error al realizar la petición: "+err.Error(), http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
