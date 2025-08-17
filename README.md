@@ -21,3 +21,6 @@ curl http://192.168.122.207:8082/api2/202109705/llamar-api3
 
 curl http://localhost:8083/api3/202109705/llamar-api1
 curl http://localhost:8083/api3/202109705/llamar-api2
+
+curl http://192.168.122.114:8083/api3/202109705/llamar-api1
+curl http://192.168.122.114:8083/api3/202109705/llamar-api2
