@@ -18,13 +18,15 @@ type Response struct {
 }
 
 func main() {
-	http.HandleFunc("/api3/"+Carnet+"/llamar-api1", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api3/"+Carnet+"/respuesta-api3", func(w http.ResponseWriter, r *http.Request) {
 		writeJson(w, Response{Message: "Hola, responde la API3.1: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
 	})
 
+	/*
 	http.HandleFunc("/api3/"+Carnet+"/llamar-api2", func(w http.ResponseWriter, r *http.Request) {
 		writeJson(w, Response{Message: "Hola, responde la API3.2: " + ApiName + " en la " + VmName + ", desarrollada por el estudiante: " + Estudiante + " con carnet: " + Carnet})
 	})
+	*/
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
