@@ -94,3 +94,5 @@ curl http://192.168.122.114:8083/api3/202109705/llamar-api2
 
 * df -h
 * sudo rm -rf /opt/zot/data/_upload 2>/dev/null || true
+
+- curl http://192.168.122.158:5000/v2/_catalog
