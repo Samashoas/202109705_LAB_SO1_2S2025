@@ -251,7 +251,38 @@ De igual forma la distribución y definición de los endpoints a utilizar son de
 
 </div>
 
-3. Se tiene que crear un archivo tipo Dockerfile para poder crear el contenedor de las API's realizadas
+3. Se tiene que crear un archivo tipo Dockerfile para poder crear el contenedor de las API's realizadas y crear el contenedor de ZOT en base a ese dockerfile con el siguiente comando:
+
+```bash
+sudo nerdctl build -t api1:latest .
+sudo nerdctl run -d --name api1 -p 8081:8081 api1:latest
+```
+
+En dado caso de que al momento de construir el contenedor este devuelva que ya no hay almacentamiento ingresar los siguientes comandos
+
+```bash
+# Prune de containerd/nerdctl (borra contenedores/imágenes/parches sin uso)
+sudo nerdctl system prune -a -f --volumes
+```
+
+Es recomendable hacer lo anterior antes de crear los contenedores
+
+4. Creación del tag para cada contenedor creado
+
+```bash
+sudo nerdctl tag <contenedor:latest> <IP_VM3>:5000/<nombre_api:version>
+```
+
+## 1.4 Push de los contenedores a ZOT
+
+1. Realizar el push de las API's a los servicios de ZOT de la VM3
+
+```bash
+sudo nerdctl --insecure-registry push <IP_VM3>:5000/<tag de la iamagen a pushear>
+```
+
+
+
 
 ## API1-ENDPONTS_TEST
 
