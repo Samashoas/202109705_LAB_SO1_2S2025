@@ -210,7 +210,48 @@ docker --version
 sudo mkdir -p /opt/zot/data
 sudo docker run -d --name zot -p 5000:5000 -v /opt/zot/data:/var/lib/registry ghcr.io/project-zot/zot-linux-amd64:latest
 ```
+## 1.3 Creación de las API
 
+1. Creacion de las respuestas de las API's, estos endpoints posteriormente serán utilizados para poder recibir una verificación de que las llamadas a otras API's está siendo correcta
+
+| VM | API | ENDPOINT-RESPUESTA |
+|:--:|:---:|:------------------:|
+|VM1 | API1 | /api1/202109705/respuesta-api1 |
+|VM1 | API2 | /api2/202109705/respuesta-api2 |
+|VM2 | API3 | /api3/202109705/respuesta-api3 |
+
+Las respuestas que generan estos endpoints corresponden a un JSON con la siguiente estructura:
+
+```bash
+{ 
+    "mensaje": "Hola, responde la API: [NOMBRE_DE_LA_API] en 
+    la [NOMBRE_DE_VM_DONDE_SE_ENCUENTRA], desarrollada por el 
+    estudiante [NOMBRE_DEL_ESTUDIANTE] con carnet: 
+    [#_CARNET]"
+} 
+```
+
+2. Creación de los endpoints de llamada, estas llamadas se realizan con una función forward la cual debe de hacer lo siguiente:
+
+* Relizar una petición de tipo GET a la URL que recibe como argumento
+* Si ocurre un error al realizar la petición responde con un estado 502 (BAD GATEWAY)
+* Copia los header de las respuestas recibidas y los añade a la respuesta que enviará el cliente
+* Escribe el código de estado HTTP de la respuesta original
+* Copia el cuerpo de la respuesta recibida y lo envía al cliente
+
+De igual forma la distribución y definición de los endpoints a utilizar son de la siguiente manera:
+
+<div align="center">
+
+| VM | API | ENDPOINT 1 | ENDPOINT 2 |
+|:--:|:---:|:----------:|:---------:|
+|VM1 |API1 | GET /api1/#CARNET/llamar-api2 | GET /api1/#CARNET/llamar-api3 |
+|VM1 |API2 | GET /api2/#CARNET/llamar-api1 | GET /api2/#CARNET/llamar-api3 |
+|VM1 |API1 | GET /api3/#CARNET/llamar-api1 | GET /api3/#CARNET/llamar-api2 |
+
+</div>
+
+3. Se tiene que crear un archivo tipo Dockerfile para poder crear el contenedor de las API's realizadas
 
 ## API1-ENDPONTS_TEST
 
