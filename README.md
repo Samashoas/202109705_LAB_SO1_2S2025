@@ -187,6 +187,30 @@ hostname -I
 ```
 La IP indicada se debe de colocar en VSCODE, se tiene que tener la extensión Remote-SSH instalada previamente
 
+### 1.2.2 Configuración VM3
+
+1. Actualizar los paquetes del sistema
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+2. Instalar docker y habilitarlo para que funcione en todo momento
+
+```bash
+sudo apt install -y docker.io
+sudo systemctl enable --now docker
+
+echo verificar versión de docker instalada
+docker --version
+```
+3. Instalación del servicio ZOT
+
+```bash
+sudo mkdir -p /opt/zot/data
+sudo docker run -d --name zot -p 5000:5000 -v /opt/zot/data:/var/lib/registry ghcr.io/project-zot/zot-linux-amd64:latest
+```
+
 
 ## API1-ENDPONTS_TEST
 
