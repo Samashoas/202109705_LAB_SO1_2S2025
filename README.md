@@ -344,3 +344,7 @@ sudo docker start <name>
 ```bash
 curl http://192.168.122.158:5000/v2/_catalog
 ```
+
+<br>Juan Pablo Samayoa Ruiz</br>
+<br>202109705</br>
+<br>v1.0.0</br>
