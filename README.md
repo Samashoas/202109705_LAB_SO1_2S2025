@@ -1,5 +1,10 @@
 # 202109705_LAB_SO1_2S2025
 
+<div align="center">
+
+![Texto alternativo](./imgs/Arquitectura_P1.png)
+</div>
+
 ## 1. Guia de instalación
 
 ### 1.1 Instalación de hipervisor KVM
@@ -281,33 +286,61 @@ sudo nerdctl tag <contenedor:latest> <IP_VM3>:5000/<nombre_api:version>
 sudo nerdctl --insecure-registry push <IP_VM3>:5000/<tag de la iamagen a pushear>
 ```
 
+En el caso de que ocurran errores al momento de realizar el push es posible que se deban al poco almacenamiento de las VM, por lo que se debe hacer una limpieza constante previa a cada push
 
+```bash
+sudo rm -rf /opt/zot/data/_upload 2>/dev/null || true
+```
 
 
 ## API1-ENDPONTS_TEST
 
+```bash
 curl http://192.168.122.207:8081/api1/202109705/llamar-api2
 curl http://192.168.122.207:8081/api1/202109705/llamar-api3
+```
+
+<div align="center">
+
+![Texto alternativo](./imgs/API1_CALLS.png)
+</div>
 
 
 ## API2-ENDPOINTS_TEST
 
+```bash
 curl http://192.168.122.207:8082/api2/202109705/llamar-api1
 curl http://192.168.122.207:8082/api2/202109705/llamar-api3
+```
+<div align="center">
+
+![Texto alternativo](./imgs/API2_CALLS.png)
+</div>
+
 
 ## API3-ENDPOINTS_TEST
 
+```bash
 curl http://192.168.122.114:8083/api3/202109705/llamar-api1
 curl http://192.168.122.114:8083/api3/202109705/llamar-api2
+```
+
+<div align="center">
+
+![Texto alternativo](./imgs/API3_CALLS.png)
+</div>
 
 ## Comandos para levantar contenedores en VM1, VM2 y VM3
 
-* sudo nerdctl start <name>
-* sudo docker start <name>
+Estos comandos ayudan a levandar los contenedores en caso se lleguen a apagar las VM y no se haya configurado la imagen para que se levante automaticamente con el inicio de la API
 
-## Comandos utiles para verificar espacio en memoria y liberar espacio
+```bash
+sudo nerdctl start <name>
+sudo docker start <name>
+```
 
-* df -h
-* sudo rm -rf /opt/zot/data/_upload 2>/dev/null || true
+## Consulta y verificación de contenedores almacenados en ZOT
 
-- curl http://192.168.122.158:5000/v2/_catalog
+```bash
+curl http://192.168.122.158:5000/v2/_catalog
+```
