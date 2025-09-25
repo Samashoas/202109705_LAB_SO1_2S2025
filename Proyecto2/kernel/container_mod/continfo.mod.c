@@ -19,9 +19,13 @@ __section(".gnu.linkonce.this_module") = {
 static const struct modversion_info ____versions[]
 __used __section("__versions") = {
 	{ 0x5218fe90, "single_open" },
+	{ 0xc7ffe1aa, "si_meminfo" },
 	{ 0x464d002c, "seq_write" },
-	{ 0xa2152099, "init_task" },
+	{ 0x43f4e0dd, "init_task" },
+	{ 0xfbb1da18, "init_pid_ns" },
+	{ 0x058c185a, "jiffies" },
 	{ 0x12cfb334, "seq_printf" },
+	{ 0xd272d446, "__stack_chk_fail" },
 	{ 0xfefac423, "remove_proc_entry" },
 	{ 0xd22cd56f, "seq_read" },
 	{ 0x388dee05, "seq_lseek" },
@@ -36,9 +40,13 @@ __used __section("__versions") = {
 static const u32 ____version_ext_crcs[]
 __used __section("__version_ext_crcs") = {
 	0x5218fe90,
+	0xc7ffe1aa,
 	0x464d002c,
-	0xa2152099,
+	0x43f4e0dd,
+	0xfbb1da18,
+	0x058c185a,
 	0x12cfb334,
+	0xd272d446,
 	0xfefac423,
 	0xd22cd56f,
 	0x388dee05,
@@ -52,9 +60,13 @@ __used __section("__version_ext_crcs") = {
 static const char ____version_ext_names[]
 __used __section("__version_ext_names") =
 	"single_open\0"
+	"si_meminfo\0"
 	"seq_write\0"
 	"init_task\0"
+	"init_pid_ns\0"
+	"jiffies\0"
 	"seq_printf\0"
+	"__stack_chk_fail\0"
 	"remove_proc_entry\0"
 	"seq_read\0"
 	"seq_lseek\0"
@@ -69,4 +81,4 @@ __used __section("__version_ext_names") =
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "7E16A3EC33E32BD66CF22C7");
+MODULE_INFO(srcversion, "47C8086E306873747F2A523");
