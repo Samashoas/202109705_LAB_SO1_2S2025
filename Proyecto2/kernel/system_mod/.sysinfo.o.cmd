@@ -1125,6 +1125,11 @@ deps_sysinfo.o := \
   /usr/src/linux-headers-6.14.0-29-generic/include/linux/vm_event_item.h \
     $(wildcard include/config/MEMORY_BALLOON) \
     $(wildcard include/config/BALLOON_COMPACTION) \
+  /usr/src/linux-headers-6.14.0-29-generic/include/linux/nsproxy.h \
+  /usr/src/linux-headers-6.14.0-29-generic/include/linux/pid_namespace.h \
+    $(wildcard include/config/MEMFD_CREATE) \
+    $(wildcard include/config/PID_NS) \
+  /usr/src/linux-headers-6.14.0-29-generic/include/linux/ns_common.h \
 
 sysinfo.o: $(deps_sysinfo.o)
 

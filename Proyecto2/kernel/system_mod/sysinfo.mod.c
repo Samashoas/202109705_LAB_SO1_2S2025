@@ -22,7 +22,6 @@ __used __section("__versions") = {
 	{ 0xc7ffe1aa, "si_meminfo" },
 	{ 0x464d002c, "seq_write" },
 	{ 0x12cfb334, "seq_printf" },
-	{ 0xa2152099, "init_task" },
 	{ 0xd272d446, "__stack_chk_fail" },
 	{ 0xfefac423, "remove_proc_entry" },
 	{ 0xd22cd56f, "seq_read" },
@@ -41,7 +40,6 @@ __used __section("__version_ext_crcs") = {
 	0xc7ffe1aa,
 	0x464d002c,
 	0x12cfb334,
-	0xa2152099,
 	0xd272d446,
 	0xfefac423,
 	0xd22cd56f,
@@ -59,7 +57,6 @@ __used __section("__version_ext_names") =
 	"si_meminfo\0"
 	"seq_write\0"
 	"seq_printf\0"
-	"init_task\0"
 	"__stack_chk_fail\0"
 	"remove_proc_entry\0"
 	"seq_read\0"
@@ -75,4 +72,4 @@ __used __section("__version_ext_names") =
 MODULE_INFO(depends, "");
 
 
-MODULE_INFO(srcversion, "5AE1CE6322C6F9681087644");
+MODULE_INFO(srcversion, "D96AF1B586C8F2964277732");
