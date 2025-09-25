@@ -47,11 +47,13 @@ func main(){
     // Scripts de cargas
     setupPath := filepath.Join(dirActual, "bash", "setup_cronjob.sh")
     loadSysinfoko := filepath.Join(dirActual, "bash", "load_sysinfoko.sh")
+    loadContinfoko := filepath.Join(dirActual, "bash", "load_continfoko.sh")
     defaultContainerPath := filepath.Join(dirActual, "bash", "default_container.sh")
 
     // Scripts de limpieza
     cleanPath := filepath.Join(dirActual, "bash", "cleaning_container.sh")
     removeSysinfoko := filepath.Join(dirActual, "bash", "remove_sysinfoko.sh")
+    removeContinfoko := filepath.Join(dirActual, "bash", "remove_continfoko.sh")
     deletePath := filepath.Join(dirActual, "bash", "delete_cronjob.sh")
     deleteDefContainer := filepath.Join(dirActual, "bash", "delete_defcontainer.sh")
 
@@ -61,8 +63,17 @@ func main(){
     if _, err := os.Stat(loadSysinfoko); os.IsNotExist(err) {
         log.Printf("ADVERTENCIA: El script no existe en la ruta: %s", loadSysinfoko)
     } else {
-        // AQUÍ ESTÁ LA LÍNEA AÑADIDA: Carga el módulo del kernel
         if err := EjecutarScript(loadSysinfoko); err != nil {
+            log.Printf("Error al cargar el módulo del kernel: %v", err)
+        } else {
+            log.Println("Módulo del kernel cargado exitosamente")
+        }
+    }
+
+    if _, err := os.Stat(loadContinfoko); os.IsNotExist(err) {
+        log.Printf("ADVERTENCIA: El script no existe en la ruta: %s", loadContinfoko)
+    } else {
+        if err := EjecutarScript(loadContinfoko); err != nil {
             log.Printf("Error al cargar el módulo del kernel: %v", err)
         } else {
             log.Println("Módulo del kernel cargado exitosamente")
@@ -128,6 +139,11 @@ func main(){
     log.Println("Eliminando kernel de informacion del sistema...")
     if err := EjecutarScript(removeSysinfoko); err != nil {
         log.Printf("Error al eliminar el kernel de información del sistema: %v", err)
+    }
+
+    log.Println("Eliminando kernel de informacion de los contenedores...")
+    if err := EjecutarScript(removeContinfoko); err != nil {
+        log.Printf("Error al eliminar el kernel de información de los contenedores: %v", err)
     }
 
     log.Println("Esperando a que terminen los procesos reciduales del cronjob (10 segundos)")
