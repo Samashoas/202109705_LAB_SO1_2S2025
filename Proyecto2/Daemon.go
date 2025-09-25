@@ -56,14 +56,21 @@ func main(){
     deleteDefContainer := filepath.Join(dirActual, "bash", "delete_defcontainer.sh")
 
     log.Printf("Cargando kernel: %s", loadSysinfoko)
-
-    log.Printf("Contenedor por defecto: %s", defaultContainerPath)
     
     // Verificar que los scripts existen
     if _, err := os.Stat(loadSysinfoko); os.IsNotExist(err) {
         log.Printf("ADVERTENCIA: El script no existe en la ruta: %s", loadSysinfoko)
+    } else {
+        // AQUÍ ESTÁ LA LÍNEA AÑADIDA: Carga el módulo del kernel
+        if err := EjecutarScript(loadSysinfoko); err != nil {
+            log.Printf("Error al cargar el módulo del kernel: %v", err)
+        } else {
+            log.Println("Módulo del kernel cargado exitosamente")
+        }
     }
 
+    log.Printf("Contenedor por defecto: %s", defaultContainerPath)
+    
     // Contenedores default 
     log.Println("Creando contenedores por defecto...")
     if err := EjecutarScript(defaultContainerPath); err != nil{
@@ -131,5 +138,5 @@ func main(){
             log.Printf("Error al eliminar contenedores: %v", err)
         }
     }
-log.Println("Daemon terminado correctamente")
+    log.Println("Daemon terminado correctamente")
 }
