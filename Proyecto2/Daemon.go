@@ -46,7 +46,11 @@ func main(){
     // Construir rutas absolutas para los scripts
     setupPath := filepath.Join(dirActual, "bash", "setup_cronjob.sh")
     cleanPath := filepath.Join(dirActual, "bash", "cleaning_container.sh")
+    defaultContainerPath := filepath.Join(dirActual, "bash", "default_container.sh")
     deletePath := filepath.Join(dirActual, "bash", "delete_cronjob.sh")
+    deleteDefContainer := filepath.Join(dirActual, "bash", "delete_defcontainer.sh")
+
+    log.Printf("Contenedor por defecto: %s", defaultContainerPath)
     
     // Verificar que los scripts existen
     if _, err := os.Stat(setupPath); os.IsNotExist(err) {
@@ -86,6 +90,10 @@ func main(){
                     log.Println("Alerta: Uso de recursos excedido, terminando contenedores")
                     _ = EjecutarScript(cleanPath)
                 }
+
+                log.Println("Verificando contenedor por defecto...")
+                _ = EjecutarScript(defaultContainerPath)
+
                 time.Sleep(TiemposVerificacion)
             }
         }
@@ -94,6 +102,11 @@ func main(){
     log.Println("Eliminando cronjob...")
     if err := EjecutarScript(deletePath); err != nil{
         log.Printf("Error al eliminar el cronjob: %v", err)
+    }
+
+    log.Println("Eliminando contenedores por defecto")
+    if err := EjecutarScript(deleteDefContainer); err != nil{
+        log.Printf("Error al eliminar contenedores por defecto: %v", err)
     }
 
     log.Println("Esperando a que terminen los procesos reciduales del cronjob (10 segundos)")
