@@ -23,7 +23,7 @@ const (
     DatabasePath = "./monitor.db"
 )
 
-// Estructuras para deserialización de la información de /proc
+// ... (mantener todas las estructuras existentes)
 type RAMInfo struct {
     TotalKb int64 `json:"total_kb"`
     UsedKb  int64 `json:"used_kb"`
@@ -49,8 +49,146 @@ type ContainerInfo struct {
     ContainerProcesses []ContainerProcess `json:"container_processes"`
 }
 
+// NUEVAS FUNCIONES PARA GRAFANA
+func IniciarGrafana() error {
+    log.Println("🚀 Iniciando Grafana con Docker Compose...")
+    
+    if _, err := os.Stat("docker-compose.yml"); os.IsNotExist(err) {
+        return fmt.Errorf("archivo docker-compose.yml no encontrado")
+    }
+    
+    log.Println("⚡ Ejecutando docker-compose up -d (puede tardar 30-60 segundos)...")
+    
+    cmd := exec.Command("sudo", "docker-compose", "up", "-d")
+    // Mostrar salida en tiempo real
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    
+    err := cmd.Run()
+    if err != nil {
+        log.Printf("❌ Error iniciando Grafana: %v", err)
+        return err
+    }
+    
+    log.Println("✅ Grafana iniciado, verificando estado...")
+    
+    // Verificar estado con timeout más corto
+    for i := 0; i < 10; i++ {
+        cmd = exec.Command("sudo", "docker", "ps", "--filter", "name=grafana-monitor", "--format", "{{.Status}}")
+        output, err := cmd.CombinedOutput()
+        if err == nil && len(output) > 0 {
+            log.Printf("📊 Estado de Grafana: %s", string(output))
+            break
+        }
+        log.Printf("⏳ Esperando Grafana... (%d/10)", i+1)
+        time.Sleep(3 * time.Second)
+    }
+    
+    log.Println("🌐 Grafana debería estar disponible en: http://localhost:3000/login")
+    log.Println("👤 Credenciales - Usuario: admin | Contraseña: admin")
+    
+    return nil
+}
+
+func DetenerGrafana() error {
+    log.Println("🛑 Deteniendo Grafana...")
+    
+    cmd := exec.Command("sudo", "docker-compose", "down")
+    output, err := cmd.CombinedOutput()
+    if err != nil {
+        log.Printf("❌ Error deteniendo Grafana: %v\nSalida: %s", err, string(output))
+        return err
+    }
+    
+    log.Printf("✅ Grafana detenido exitosamente: %s", string(output))
+    return nil
+}
+
+func VerificarDependenciasGrafana() error {
+    log.Println("🔍 Verificando dependencias de Grafana...")
+    
+    // Verificar Docker
+    cmd := exec.Command("sudo", "docker", "--version")
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("Docker no está instalado o no funciona: %v", err)
+    }
+    log.Println("✅ Docker disponible")
+    
+    // Verificar Docker Compose
+    cmd = exec.Command("sudo", "docker-compose", "--version")
+    if err := cmd.Run(); err != nil {
+        return fmt.Errorf("Docker Compose no está instalado o no funciona: %v", err)
+    }
+    log.Println("✅ Docker Compose disponible")
+    
+    // Verificar estructura de carpetas de Grafana
+    requiredDirs := []string{
+        "grafana/provisioning/datasources",
+        "grafana/provisioning/dashboards",
+        "grafana/dashboards",
+    }
+    
+    for _, dir := range requiredDirs {
+        if _, err := os.Stat(dir); os.IsNotExist(err) {
+            log.Printf("⚠️ Creando directorio faltante: %s", dir)
+            if err := os.MkdirAll(dir, 0755); err != nil {
+                return fmt.Errorf("error creando directorio %s: %v", dir, err)
+            }
+        }
+    }
+    log.Println("✅ Estructura de directorios de Grafana verificada")
+    
+    return nil
+}
+
+func CrearConfiguracionGrafana() error {
+    log.Println("📝 Creando archivos de configuración de Grafana...")
+    
+    // Crear datasource configuration
+    datasourceConfig := `apiVersion: 1
+
+datasources:
+  - name: SQLite Monitor
+    type: frser-sqlite-datasource
+    access: proxy
+    url: file:/var/lib/grafana/monitor.db
+    isDefault: true
+    editable: true
+    jsonData:
+      path: /var/lib/grafana/monitor.db`
+    
+    datasourcePath := "grafana/provisioning/datasources/sqlite.yml"
+    if err := ioutil.WriteFile(datasourcePath, []byte(datasourceConfig), 0644); err != nil {
+        return fmt.Errorf("error creando configuración de datasource: %v", err)
+    }
+    log.Printf("✅ Configuración de datasource creada: %s", datasourcePath)
+    
+    // Crear dashboard configuration
+    dashboardConfig := `apiVersion: 1
+
+providers:
+  - name: 'System Monitor'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards`
+    
+    dashboardPath := "grafana/provisioning/dashboards/dashboards.yml"
+    if err := ioutil.WriteFile(dashboardPath, []byte(dashboardConfig), 0644); err != nil {
+        return fmt.Errorf("error creando configuración de dashboard: %v", err)
+    }
+    log.Printf("✅ Configuración de dashboard creada: %s", dashboardPath)
+    
+    return nil
+}
+
+// ... (mantener todas las funciones existentes)
 func setupDatabase() (*sql.DB, error) {
-    // Eliminar base de datos existente si está corrupta
+    // (mantener código existente)
     if _, err := os.Stat(DatabasePath); err == nil {
         log.Printf("Base de datos existente encontrada, verificando integridad...")
     }
@@ -60,12 +198,10 @@ func setupDatabase() (*sql.DB, error) {
         return nil, fmt.Errorf("error abriendo base de datos: %v", err)
     }
 
-    // Verificar que la conexión funciona
     if err := db.Ping(); err != nil {
         return nil, fmt.Errorf("error conectando a la base de datos: %v", err)
     }
 
-    // Crear tablas por separado para mejor control de errores
     createSystemMetricsSQL := `
     CREATE TABLE IF NOT EXISTS system_metrics (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,19 +226,16 @@ func setupDatabase() (*sql.DB, error) {
         status TEXT
     );`
 
-    // Ejecutar creación de tabla system_metrics
     if _, err := db.Exec(createSystemMetricsSQL); err != nil {
         return nil, fmt.Errorf("error creando tabla system_metrics: %v", err)
     }
     log.Println("✓ Tabla system_metrics creada/verificada")
 
-    // Ejecutar creación de tabla container_metrics
     if _, err := db.Exec(createContainerMetricsSQL); err != nil {
         return nil, fmt.Errorf("error creando tabla container_metrics: %v", err)
     }
     log.Println("✓ Tabla container_metrics creada/verificada")
 
-    // Verificar que las tablas se crearon correctamente
     var systemTableCount, containerTableCount int
     
     err = db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='system_metrics';").Scan(&systemTableCount)
@@ -126,6 +259,8 @@ func setupDatabase() (*sql.DB, error) {
     log.Printf("✓ Base de datos configurada correctamente con %d tablas", systemTableCount + containerTableCount)
     return db, nil
 }
+
+// ... (mantener todas las otras funciones existentes: EjecutarScript, LeerArchivoProcSysinfo, etc.)
 
 func EjecutarScript(ruta string) error{
     cmd := exec.Command("bash", ruta)
@@ -207,7 +342,6 @@ func AnalizarYGestionarContenedores(continfo *ContainerInfo, cleanPath string, d
         return nil
     }
     
-    // Crear copias para ordenamiento
     byRAM := make([]ContainerProcess, len(continfo.ContainerProcesses))
     byCPU := make([]ContainerProcess, len(continfo.ContainerProcesses))
     byVSZ := make([]ContainerProcess, len(continfo.ContainerProcesses))
@@ -218,7 +352,6 @@ func AnalizarYGestionarContenedores(continfo *ContainerInfo, cleanPath string, d
     copy(byVSZ, continfo.ContainerProcesses)
     copy(byRSS, continfo.ContainerProcesses)
     
-    // Ordenar por diferentes criterios
     sort.Slice(byRAM, func(i, j int) bool {
         return byRAM[i].PctMem > byRAM[j].PctMem
     })
@@ -235,24 +368,36 @@ func AnalizarYGestionarContenedores(continfo *ContainerInfo, cleanPath string, d
         return byRSS[i].RssKb > byRSS[j].RssKb
     })
     
-    log.Println("Top contenedores por uso de RAM:")
+    log.Println("🔴 Top contenedores por uso de RAM:")
     for i, p := range byRAM[:min(3, len(byRAM))] {
-        log.Printf("%d. Container: %s (PID: %d), Mem: %d%%, CPU: %d%%", i+1, p.Name, p.PID, p.PctMem, p.PctCPU)
+        log.Printf("  %d. %s (PID: %d) - RAM: %d%%, CPU: %d%%, VSZ: %d KB, RSS: %d KB", 
+            i+1, p.Name, p.PID, p.PctMem, p.PctCPU, p.VszKb, p.RssKb)
     }
     
-    log.Println("Top contenedores por uso de CPU:")
+    log.Println("🔵 Top contenedores por uso de CPU:")
     for i, p := range byCPU[:min(3, len(byCPU))] {
-        log.Printf("%d. Container: %s (PID: %d), CPU: %d%%, Mem: %d%%", i+1, p.Name, p.PID, p.PctCPU, p.PctMem)
+        log.Printf("  %d. %s (PID: %d) - CPU: %d%%, RAM: %d%%, VSZ: %d KB, RSS: %d KB", 
+            i+1, p.Name, p.PID, p.PctCPU, p.PctMem, p.VszKb, p.RssKb)
     }
     
-    // Decisión de eliminar contenedores
+    log.Println("🟡 Top contenedores por VSZ (Memoria Virtual):")
+    for i, p := range byVSZ[:min(3, len(byVSZ))] {
+        log.Printf("  %d. %s (PID: %d) - VSZ: %d KB, RSS: %d KB, RAM: %d%%, CPU: %d%%", 
+            i+1, p.Name, p.PID, p.VszKb, p.RssKb, p.PctMem, p.PctCPU)
+    }
+    
+    log.Println("🟢 Top contenedores por RSS (Memoria Física):")
+    for i, p := range byRSS[:min(3, len(byRSS))] {
+        log.Printf("  %d. %s (PID: %d) - RSS: %d KB, VSZ: %d KB, RAM: %d%%, CPU: %d%%", 
+            i+1, p.Name, p.PID, p.RssKb, p.VszKb, p.PctMem, p.PctCPU)
+    }
+    
     debeEliminar := false
     statusContenedores := "running"
     
-    // Verificar si hay contenedores con alto consumo
     for i := 0; i < min(2, len(byRAM)); i++ {
         if byRAM[i].PctMem > 30 {
-            log.Printf("Contenedor con alto uso de RAM detectado: %s (%d%%)", byRAM[i].Name, byRAM[i].PctMem)
+            log.Printf("⚠️ Contenedor con alto uso de RAM detectado: %s (%d%%)", byRAM[i].Name, byRAM[i].PctMem)
             debeEliminar = true
             break
         }
@@ -260,25 +405,27 @@ func AnalizarYGestionarContenedores(continfo *ContainerInfo, cleanPath string, d
     
     for i := 0; i < min(2, len(byCPU)); i++ {
         if byCPU[i].PctCPU > 30 {
-            log.Printf("Contenedor con alto uso de CPU detectado: %s (%d%%)", byCPU[i].Name, byCPU[i].PctCPU)
+            log.Printf("⚠️ Contenedor con alto uso de CPU detectado: %s (%d%%)", byCPU[i].Name, byCPU[i].PctCPU)
             debeEliminar = true
             break
         }
     }
     
-    // Si detectamos contenedores problemáticos, ejecutar limpieza general
     if debeEliminar {
-        log.Println("Ejecutando limpieza general de contenedores debido a alto consumo de recursos...")
+        log.Println("🧹 Ejecutando limpieza general de contenedores debido a alto consumo de recursos...")
         statusContenedores = "terminated"
         err := EjecutarScript(cleanPath)
         if err != nil {
-            log.Printf("Error ejecutando limpieza: %v", err)
+            log.Printf("❌ Error ejecutando limpieza: %v", err)
+        } else {
+            log.Println("✅ Limpieza de contenedores ejecutada exitosamente")
         }
     }
     
-    // Guardar métricas de contenedores en la base de datos
     if err := GuardarMetricasContenedores(db, continfo, statusContenedores); err != nil {
-        log.Printf("Error guardando métricas de contenedores: %v", err)
+        log.Printf("❌ Error guardando métricas de contenedores: %v", err)
+    } else {
+        log.Println("✅ Métricas de contenedores guardadas en BD")
     }
     
     return nil
@@ -291,32 +438,45 @@ func min(a, b int) int {
     return b
 }
 
+// FUNCIÓN MAIN MODIFICADA
 func main(){
-    log.Println("Iniciando el daemon de monitoreo de recursos...")
+    log.Println("🚀 Iniciando el daemon de monitoreo de recursos con Grafana...")
     
-    // Configurar base de datos
+    // NUEVAS INICIALIZACIONES PARA GRAFANA
+    // Verificar dependencias de Grafana
+    if err := VerificarDependenciasGrafana(); err != nil {
+        log.Fatalf("❌ Error verificando dependencias de Grafana: %v", err)
+    }
+    
+    // Crear archivos de configuración de Grafana
+    if err := CrearConfiguracionGrafana(); err != nil {
+        log.Fatalf("❌ Error creando configuración de Grafana: %v", err)
+    }
+    
+    // Configurar base de datos ANTES de iniciar Grafana
     db, err := setupDatabase()
     if err != nil {
-        log.Fatalf("Error configurando la base de datos: %v", err)
+        log.Fatalf("❌ Error configurando la base de datos: %v", err)
     }
     defer db.Close()
+    log.Printf("✅ Base de datos SQLite configurada en: %s", DatabasePath)
     
-    log.Printf("Base de datos SQLite configurada en: %s", DatabasePath)
+    // INICIAR GRAFANA
+    if err := IniciarGrafana(); err != nil {
+        log.Fatalf("❌ Error iniciando Grafana: %v", err)
+    }
     
-    // Obtener ruta absoluta al directorio donde está Daemon.go
+    // ... (resto del código existente para scripts)
     dirActual, err := os.Getwd()
     if err != nil {
         log.Fatalf("Error obteniendo directorio actual: %v", err)
     }
     
-    // Construir rutas absolutas para los scripts
-    // Scripts de cargas
     setupPath := filepath.Join(dirActual, "bash", "setup_cronjob.sh")
     loadSysinfoko := filepath.Join(dirActual, "bash", "load_sysinfoko.sh")
     loadContinfoko := filepath.Join(dirActual, "bash", "load_continfoko.sh")
     defaultContainerPath := filepath.Join(dirActual, "bash", "default_container.sh")
 
-    // Scripts de limpieza
     cleanPath := filepath.Join(dirActual, "bash", "cleaning_container.sh")
     removeSysinfoko := filepath.Join(dirActual, "bash", "remove_sysinfoko.sh")
     removeContinfoko := filepath.Join(dirActual, "bash", "remove_continfoko.sh")
@@ -325,7 +485,6 @@ func main(){
 
     log.Printf("Cargando kernel: %s", loadSysinfoko)
     
-    // Verificar que los scripts existen
     if _, err := os.Stat(loadSysinfoko); os.IsNotExist(err) {
         log.Printf("ADVERTENCIA: El script no existe en la ruta: %s", loadSysinfoko)
     } else {
@@ -348,7 +507,6 @@ func main(){
 
     log.Printf("Contenedor por defecto: %s", defaultContainerPath)
     
-    // Contenedores default 
     log.Println("Creando contenedores por defecto...")
     if err := EjecutarScript(defaultContainerPath); err != nil{
         log.Printf("Error al crear contenedores por defecto: %v", err)
@@ -358,7 +516,6 @@ func main(){
         log.Printf("ADVERTENCIA: El script no existe en la ruta: %s", setupPath)
     }
 
-    // Ejecutar script de configuración
     if err := EjecutarScript(setupPath); err != nil{
         log.Printf("Error al ejecutar el cronjob: %v", err)
     }
@@ -373,79 +530,93 @@ func main(){
         done <- true
     }()
     
-    // Loop principal
+    log.Println("🎯 Sistema de monitoreo iniciado completamente!")
+    log.Println("📊 Grafana: http://localhost:3000 (admin/admin)")
+    log.Println("🔄 Iniciando loop de monitoreo cada 20 segundos...")
+    
+    // Loop principal (mantener código existente)
     loop:
         for{
             select{
             case <-done:
                 break loop
             default:
-                // Leer información del sistema
+                log.Println("🔄 Ciclo de monitoreo iniciado...")
+                
                 sysInfo, err := LeerArchivoProcSysinfo()
                 if err != nil {
-                    log.Printf("Error leyendo /proc/sysinfo_so1_202109705: %v", err)
+                    log.Printf("❌ Error leyendo /proc/sysinfo_so1_202109705: %v", err)
                 } else {
-                    log.Printf("RAM: Total: %d KB, Usado: %d KB, Libre: %d KB",
-                        sysInfo.RAM.TotalKb, sysInfo.RAM.UsedKb, sysInfo.RAM.FreeKb)
+                    pctMemoriaUsada := float64(sysInfo.RAM.UsedKb) * 100.0 / float64(sysInfo.RAM.TotalKb)
+                    log.Printf("🖥️ Sistema - RAM: Total: %d KB, Usado: %d KB (%.2f%%), Libre: %d KB",
+                        sysInfo.RAM.TotalKb, sysInfo.RAM.UsedKb, pctMemoriaUsada, sysInfo.RAM.FreeKb)
                     
-                    // Guardar métricas del sistema
                     if err := GuardarMetricasSistema(db, sysInfo); err != nil {
-                        log.Printf("Error guardando métricas del sistema: %v", err)
+                        log.Printf("❌ Error guardando métricas del sistema: %v", err)
+                    } else {
+                        log.Println("✅ Métricas del sistema guardadas en BD")
                     }
                     
-                    // Verificar si se exceden los límites
-                    pctMemoriaUsada := float64(sysInfo.RAM.UsedKb) * 100.0 / float64(sysInfo.RAM.TotalKb)
                     if pctMemoriaUsada > LimiteMemoria {
-                        log.Printf("Alerta: Uso de memoria excedido (%.2f%%), terminando contenedores", pctMemoriaUsada)
+                        log.Printf("🚨 ALERTA: Uso de memoria excedido (%.2f%%), terminando contenedores", pctMemoriaUsada)
                         _ = EjecutarScript(cleanPath)
                     }
                 }
                 
-                // Leer información de contenedores
                 contInfo, err := LeerArchivoProcContinfo()
                 if err != nil {
-                    log.Printf("Error leyendo /proc/continfo_so1_202109705: %v", err)
+                    log.Printf("❌ Error leyendo /proc/continfo_so1_202109705: %v", err)
                 } else {
-                    log.Printf("Procesos de contenedores detectados: %d", len(contInfo.ContainerProcesses))
+                    log.Printf("🐳 Procesos de contenedores detectados: %d", len(contInfo.ContainerProcesses))
                     
-                    // Analizar y gestionar contenedores
                     if err := AnalizarYGestionarContenedores(contInfo, cleanPath, db); err != nil {
-                        log.Printf("Error en la gestión de contenedores: %v", err)
+                        log.Printf("❌ Error en la gestión de contenedores: %v", err)
                     }
                 }
                 
+                log.Printf("⏱️ Esperando %v hasta el próximo ciclo...\n", TiemposVerificacion)
                 time.Sleep(TiemposVerificacion)
             }
         }
         
-    // Limpieza al terminar
-    log.Println("Eliminando cronjob...")
+    // LIMPIEZA MEJORADA (incluyendo Grafana)
+    log.Println("🧹 Iniciando limpieza del sistema...")
+    
+    log.Println("🛑 Deteniendo Grafana...")
+    if err := DetenerGrafana(); err != nil {
+        log.Printf("⚠️ Error deteniendo Grafana: %v", err)
+    }
+    
+    log.Println("🗑️ Eliminando cronjob...")
     if err := EjecutarScript(deletePath); err != nil{
         log.Printf("Error al eliminar el cronjob: %v", err)
     }
 
-    log.Println("Eliminando contenedores por defecto")
+    log.Println("🗑️ Eliminando contenedores por defecto...")
     if err := EjecutarScript(deleteDefContainer); err != nil{
         log.Printf("Error al eliminar contenedores por defecto: %v", err)
     }
 
-    log.Println("Eliminando kernel de informacion del sistema...")
+    log.Println("🗑️ Eliminando kernel de información del sistema...")
     if err := EjecutarScript(removeSysinfoko); err != nil {
         log.Printf("Error al eliminar el kernel de información del sistema: %v", err)
     }
 
-    log.Println("Eliminando kernel de informacion de los contenedores...")
+    log.Println("🗑️ Eliminando kernel de información de los contenedores...")
     if err := EjecutarScript(removeContinfoko); err != nil {
         log.Printf("Error al eliminar el kernel de información de los contenedores: %v", err)
     }
 
-    log.Println("Esperando a que terminen los procesos reciduales del cronjob (10 segundos)")
+    log.Println("⏳ Esperando a que terminen los procesos residuales del cronjob (10 segundos)...")
     time.Sleep(10 * time.Second)
 
+    log.Println("🧹 Limpieza final de contenedores...")
     for i := 0; i < 10; i++ {
         if err := EjecutarScript(cleanPath); err != nil{
             log.Printf("Error al eliminar contenedores: %v", err)
         }
     }
-    log.Println("Daemon terminado correctamente")
+    
+    log.Println("✅ Daemon terminado correctamente")
+    log.Println("📊 Grafana ha sido detenido")
 }
