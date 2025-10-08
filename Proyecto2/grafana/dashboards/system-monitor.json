@@ -1,0 +1,40 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "System Monitor Dashboard",
+    "tags": ["system", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Memory Usage Over Time",
+        "type": "stat",
+        "targets": [
+          {
+            "rawSql": "SELECT timestamp, memory_percent FROM system_metrics ORDER BY timestamp DESC LIMIT 1",
+            "format": "table"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Container Count",
+        "type": "stat",
+        "targets": [
+          {
+            "rawSql": "SELECT COUNT(*) as container_count FROM container_metrics WHERE status='running'",
+            "format": "table"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}
