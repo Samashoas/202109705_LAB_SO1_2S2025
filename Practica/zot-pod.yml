@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zot-pod
+spec:
+  containers:
+  - name: zot
+    image: quay.io/pypa/zot:latest
+    ports:
+    - containerPort: 5000
