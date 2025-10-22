@@ -1,27 +1,34 @@
 from locust import HttpUser, task, between
-import json
 import random
-
-# Lista de municipios
-municipalities = ['mixco', 'guatemala', 'amatitlan', 'chinautla']
-
-# Lista de climas
-weathers = ['sunny', 'cloudy', 'rainy', 'foggy']
+import json
 
 class WeatherTweetUser(HttpUser):
-    # Definir la frecuencia de las peticiones (entre 1 y 3 segundos)
     wait_time = between(1, 3)
-
+    
+    municipalities = [
+        "Guatemala", "Mixco", "Villa Nueva", "Petapa", "San Juan Sacatepéquez",
+        "Villa Canales", "Fraijanes", "Santa Catarina Pinula", "San José Pinula",
+        "Amatitlán", "Chinautla", "San Pedro Ayampuc"
+    ]
+    
+    weather_conditions = ["Sunny", "Cloudy", "Rainy", "Stormy", "Foggy"]
+    
     @task
-    def send_tweet(self):
-        # Generar los datos de un tweet aleatorio
-        data = {
-            "municipality": random.choice(municipalities),
-            "temperature": random.randint(15, 35),  # temperatura entre 15 y 35 grados
-            "humidity": random.randint(30, 90),     # humedad entre 30% y 90%
-            "weather": random.choice(weathers)
+    def send_weather_tweet(self):
+        tweet_data = {
+            "municipality": random.choice(self.municipalities),
+            "temperature": random.randint(15, 35),
+            "humidity": random.randint(40, 90),
+            "weather": random.choice(self.weather_conditions)
         }
-
-        # Realizar la petición POST a la API REST de Rust
-        self.client.post("/tweets", json=data)
-
+        
+        response = self.client.post(
+            "/weather",
+            json=tweet_data,
+            headers={"Content-Type": "application/json"}
+        )
+        
+        if response.status_code == 200:
+            print(f"Sent: {tweet_data}")
+        else:
+            print(f"Error {response.status_code}: {response.text}")
