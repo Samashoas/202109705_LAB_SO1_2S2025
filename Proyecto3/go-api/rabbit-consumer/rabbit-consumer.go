@@ -5,6 +5,8 @@ import (
     "log"
     "os"
     "github.com/streadway/amqp"
+    "github.com/redis/go-redis/v9"
+    "context"
 )
 
 func main() {
@@ -12,6 +14,11 @@ func main() {
     if rabbitURL == "" {
         rabbitURL = "amqp://guest:guest@localhost:5672/"
     }
+
+    rdb := redis.NewClient(&redis.Options{
+        Addr: "localhost:6379",
+    })
+    ctx := context.Background()
 
     conn, err := amqp.Dial(rabbitURL)
     if err != nil {
@@ -26,13 +33,7 @@ func main() {
     defer ch.Close()
 
     msgs, err := ch.Consume(
-        "weather-queue", // queue
-        "",              // consumer
-        true,            // auto-ack
-        false,           // exclusive
-        false,           // no-local
-        false,           // no-wait
-        nil,             // args
+        "weather-queue", "", true, false, false, false, nil,
     )
     if err != nil {
         log.Fatalf("Failed to register a consumer: %v", err)
@@ -41,5 +42,11 @@ func main() {
     fmt.Println("RabbitMQ consumer started. Waiting for messages...")
     for msg := range msgs {
         fmt.Printf("Consumed from RabbitMQ: %s\n", string(msg.Body))
+        // Guarda en Valkey
+        err := rdb.RPush(ctx, "weather_rabbitmq", string(msg.Body)).Err()
+        if err != nil {
+            log.Printf("Error storing in Valkey: %v", err)
+        }
+		log.Printf("Stored message in Valkey: %s", string(msg.Body))
     }
 }

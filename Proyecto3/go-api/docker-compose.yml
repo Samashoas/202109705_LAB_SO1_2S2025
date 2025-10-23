@@ -35,3 +35,10 @@ services:
     ports:
       - "6379:6379"
     command: ["valkey-server", "--save", "60", "1"]
+  
+  grafana:
+  image: grafana/grafana:latest
+  ports:
+    - "3000:3000"
+  environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin
