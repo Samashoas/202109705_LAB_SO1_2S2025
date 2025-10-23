@@ -29,3 +29,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+
+  valkey:
+    image: valkey/valkey:latest
+    ports:
+      - "6379:6379"
+    command: ["valkey-server", "--save", "60", "1"]
