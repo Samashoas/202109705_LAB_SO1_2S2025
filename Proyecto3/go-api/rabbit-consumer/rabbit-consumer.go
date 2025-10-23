@@ -15,8 +15,12 @@ func main() {
         rabbitURL = "amqp://guest:guest@localhost:5672/"
     }
 
+    valkeyAddr := os.Getenv("VALKEY_ADDR")
+    if valkeyAddr == "" {
+        valkeyAddr = "localhost:6379"
+    }
     rdb := redis.NewClient(&redis.Options{
-        Addr: "localhost:6379",
+        Addr: valkeyAddr,
     })
     ctx := context.Background()
 
@@ -48,7 +52,7 @@ func main() {
             log.Printf("Error storing in Valkey: %v", err)
         }
         // Expira la lista en 360 segundos
-        err = rdb.Expire(ctx, "weather_rabbitmq", 360).Err()
+        err = rdb.Expire(ctx, "weather_rabbitmq", 3600).Err()
         if err != nil {
             log.Printf("Error setting expiration in Valkey: %v", err)
         }

@@ -27,7 +27,11 @@ type Response struct {
 }
 
 func publishToKafkaGRPC(tweet WeatherTweet) error {
-    conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    kafkaAddr := os.Getenv("KAFKA_GRPC_ADDR")
+    if kafkaAddr == "" {
+        kafkaAddr = "localhost:50051"
+    }
+    conn, err := grpc.Dial(kafkaAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
     if err != nil {
         return err
     }
@@ -45,7 +49,11 @@ func publishToKafkaGRPC(tweet WeatherTweet) error {
 }
 
 func publishToRabbitGRPC(tweet WeatherTweet) error {
-    conn, err := grpc.Dial("localhost:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    rabbitAddr := os.Getenv("RABBIT_GRPC_ADDR")
+    if rabbitAddr == "" {
+        rabbitAddr = "localhost:50052"
+    }
+    conn, err := grpc.Dial(rabbitAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
     if err != nil {
         return err
     }
