@@ -42,6 +42,11 @@ func main() {
         if err != nil {
             log.Printf("Error storing in Valkey: %v", err)
         }
-		log.Printf("Stored message in Valkey: %s", string(m.Value))
+        // Expira la lista en 6 minutos (360 segundos)
+        err = rdb.Expire(ctx, "weather_kafka", 360).Err()
+        if err != nil {
+            log.Printf("Error setting expiration in Valkey: %v", err)
+        }
+        log.Printf("Stored message in Valkey: %s", string(m.Value))
     }
 }
