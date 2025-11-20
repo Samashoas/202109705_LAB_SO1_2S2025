@@ -1,0 +1,5 @@
+target
+tests
+.git
+*.md
+Cargo.lock

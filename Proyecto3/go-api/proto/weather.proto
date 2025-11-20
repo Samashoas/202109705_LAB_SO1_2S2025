@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package weather;
+
+option go_package = "./proto";
+
+message WeatherRequest {
+    string municipality = 1;
+    int32 temperature = 2;
+    int32 humidity = 3;
+    string weather = 4;
+}
+
+message WeatherResponse {
+    string message = 1;
+    bool success = 2;
+}
+
+service WeatherService {
+    rpc ProcessWeather(WeatherRequest) returns (WeatherResponse);
+}
